@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --color-void: #05070B;
+  --color-abyss: #0A0E16;
+  --color-panel: #0E141F;
+  --color-panel-raised: #131B29;
+  --color-line: #1C2532;
+  --color-line-soft: #161E29;
+  --color-ink: #E8EDF4;
+  --color-ink-dim: #8B98AC;
+  --color-ink-faint: #4E5A6E;
+
+  --color-signal: #35C4E8;
+  --color-signal-dim: #1A6B82;
+  --color-critical: #F0475C;
+  --color-high: #E8853C;
+  --color-medium: #E0B23C;
+  --color-low: #4E5A6E;
+  --color-ok: #3FCB8C;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--color-void);
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-signal-dim);
+  color: white;
+}
+
+/* thin scrollbars for the dense panels */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 3px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes scan-sweep {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes flow-dash {
+  to { stroke-dashoffset: -40; }
+}
+.flow-line {
+  stroke-dasharray: 4 4;
+  animation: flow-dash 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot, .flow-line { animation: none; }
+}
