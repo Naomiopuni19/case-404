@@ -1,9 +1,9 @@
 import { Panel } from './ui'
-import { incident } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 export default function CaseFiles() {
-  const { dispatch } = useIncidentEngine()
+  const { state, dispatch } = useIncidentEngine()
+  const { incident, caseFileNarrative, divisionLabel } = state.caseData
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -19,18 +19,13 @@ export default function CaseFiles() {
         </div>
 
         <p className="mb-5 text-[13px] leading-relaxed text-ink-dim">
-          Anomalous authentication activity has been detected within A.F.I.A. Group Finance.
-          A login to the finance environment occurred using valid credentials from an
-          unrecognized external address. You have been assigned as primary analyst on
-          this incident. Investigate the SIEM, email system, affected endpoint, and
-          network activity to determine how access was obtained, what the attacker did,
-          and whether the incident can still be contained.
+          {caseFileNarrative}
         </p>
 
         <dl className="grid grid-cols-2 gap-4 border-t border-line-soft pt-4 text-[12px] sm:grid-cols-3">
           <div>
             <dt className="text-ink-faint">Division</dt>
-            <dd className="mt-0.5 text-ink">A.F.I.A. Group Finance</dd>
+            <dd className="mt-0.5 text-ink">{divisionLabel}</dd>
           </div>
           <div>
             <dt className="text-ink-faint">Affected user</dt>

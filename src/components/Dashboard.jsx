@@ -80,7 +80,7 @@ export default function Dashboard() {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
-        <main className="flex-1 overflow-y-auto p-4">{renderPanel()}</main>
+        <main key={state.caseId} className="flex-1 overflow-y-auto p-4">{renderPanel()}</main>
       </div>
       <Toasts />
     </div>

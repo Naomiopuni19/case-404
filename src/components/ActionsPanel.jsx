@@ -1,6 +1,5 @@
 import { UserX, MonitorX, ShieldOff, RotateCcw, KeyRound, ArrowUpCircle, FileCheck2 } from 'lucide-react'
 import { Panel } from './ui'
-import { actionsCatalog } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 const ICONS = {
@@ -10,6 +9,10 @@ const ICONS = {
   'revoke-session': RotateCcw,
   'reset-credentials': KeyRound,
   escalate: ArrowUpCircle,
+  'isolate-legal-02': MonitorX,
+  'isolate-legal-05': MonitorX,
+  'block-c2-ip': ShieldOff,
+  'restore-backup': RotateCcw,
 }
 
 const TONE_STYLE = {
@@ -20,12 +23,13 @@ const TONE_STYLE = {
 
 export default function ActionsPanel() {
   const { state, dispatch } = useIncidentEngine()
+  const { actionsCatalog } = state.caseData
 
   return (
     <Panel title="Actions" className="h-full" bodyClassName="overflow-y-auto p-3">
       <div className="flex flex-col gap-1.5">
         {actionsCatalog.map((a) => {
-          const Icon = ICONS[a.id]
+          const Icon = ICONS[a.id] || ShieldOff
           const taken = state.actionsTaken.some((t) => t.id === a.id)
           return (
             <button

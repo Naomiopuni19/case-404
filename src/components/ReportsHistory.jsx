@@ -1,6 +1,5 @@
 import { FileText, ArrowRight } from 'lucide-react'
 import { Panel } from './ui'
-import { incident } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 const FIELD_LABELS = {
@@ -18,6 +17,7 @@ const FIELD_LABELS = {
 export default function ReportsHistory() {
   const { state, dispatch } = useIncidentEngine()
   const report = state.report
+  const incident = state.caseData.incident
 
   if (!report) {
     return (

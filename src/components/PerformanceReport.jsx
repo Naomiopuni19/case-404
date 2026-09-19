@@ -1,6 +1,8 @@
-import { CheckCircle2, XCircle, RotateCcw } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { CheckCircle2, XCircle, RotateCcw, Wallet, Award } from 'lucide-react'
 import { Panel } from './ui'
 import { useIncidentEngine, computeScore } from '../state/IncidentEngine'
+import { useAuth } from '../state/AuthContext'
 
 const METRICS = [
   ['detection', 'Detection'],
@@ -14,22 +16,23 @@ const METRICS = [
 function buildFeedback(state) {
   const good = []
   const missed = []
+  const { feedbackTexts } = state.caseData
 
-  if (state.investigated.emailInspected) good.push('Reviewed the phishing email and identified the spoofed domain.')
-  else missed.push('The phishing email was never opened - the initial access vector went unverified.')
+  if (state.investigated.emailInspected) good.push(feedbackTexts.emailGood)
+  else missed.push(feedbackTexts.emailMissed)
 
-  if (state.investigated.endpointInspected) good.push('Inspected FIN-FINANCE-04 and found the malicious process and dropped file.')
-  else missed.push('The compromised endpoint was never inspected directly.')
+  if (state.investigated.endpointInspected) good.push(feedbackTexts.endpointGood)
+  else missed.push(feedbackTexts.endpointMissed)
 
-  if (state.investigated.threatIntelLookups.length > 0) good.push('Checked threat intelligence on the attacker\'s indicators.')
-  else missed.push('No threat intelligence lookups were run on the IP or domain involved.')
+  if (state.investigated.threatIntelLookups.length > 0) good.push(feedbackTexts.intelGood)
+  else missed.push(feedbackTexts.intelMissed)
 
-  if (state.investigated.evidencePinned.length >= 4) good.push('Reconstructed most of the attack chain on the evidence board.')
+  if (state.investigated.evidencePinned.length >= 4) good.push('Reconstructed most of the attackchain on the evidence board.')
   else if (state.investigated.evidencePinned.length > 0) missed.push('The evidence board was only partially built out.')
   else missed.push('No evidence was pinned to reconstruct the attack chain.')
 
-  if (state.contained) good.push('Contained the incident before data left the network.')
-  else if (state.breached) missed.push('Containment actions came after the attacker had already exfiltrated data.')
+  if (state.contained) good.push('Contained the incident before the attacker reached the final stage.')
+  else if (state.breached) missed.push('Containment actions came after the attack had already reached its final stage.')
   else missed.push('The incident was not fully contained - not all critical response actions were taken.')
 
   return { good, missed }
@@ -37,18 +40,55 @@ function buildFeedback(state) {
 
 export default function PerformanceReport() {
   const { state, dispatch } = useIncidentEngine()
+  const { recordCaseSolved } = useAuth()
   const score = computeScore(state)
   const { good, missed } = buildFeedback(state)
+  const [payout, setPayout] = useState(null)
+  const [promotion, setPromotion] = useState(null)
+  const [alreadyLogged, setAlreadyLogged] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    recordCaseSolved(state.caseId, score.overall).then((result) => {
+      if (cancelled) return
+      if (result) {
+        setPayout(result.pay)
+        if (result.promoted) setPromotion(result.newRole)
+      } else {
+        setAlreadyLogged(true)
+      }
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="min-h-screen bg-void px-4 py-10">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 text-center">
           <p className={`font-mono text-xs tracking-[0.3em] ${state.contained ? 'text-ok' : 'text-high'}`}>
-            {state.contained ? 'INCIDENT CONTAINED' : state.breached ? 'INCIDENT RESOLVED - LATE CONTAINMENT' : 'INCIDENT RESOLVED'}
+            {state.contained ? 'INCIDENT CONTAINED' : state.breached ? 'INCIDENT RESOLVED - LATECONTAINMENT' : 'INCIDENT RESOLVED'}
           </p>
           <h1 className="mt-2 text-2xl font-semibold text-ink">Analyst Performance</h1>
         </div>
+
+        {promotion && (
+          <div className="mb-3 flex items-center justify-center gap-2 rounded-md border border-signal/30 bg-signal/10 px-4 py-2.5 text-[13px] text-signal">
+            <Award size={14} />
+            Promoted! You are now a {promotion}.
+          </div>
+        )}
+        {payout && (
+          <div className="mb-4 flex items-center justify-center gap-2 rounded-md border border-ok/30 bg-ok/10 px-4 py-2.5 text-[13px] text-ok">
+            <Wallet size={14} />
+            You earned GHS {payout.toLocaleString()} for this case. Check your profile balance.
+          </div>
+        )}
+        {alreadyLogged && (
+          <div className="mb-4 flex items-center justify-center gap-2 rounded-md border border-line bg-panel px-4 py-2.5 text-[13px] text-ink-dim">
+            This case was already logged in your profile.
+          </div>
+        )}
 
         <Panel bodyClassName="p-5" className="mb-4">
           <div className="mb-5 flex items-center justify-between">
@@ -69,7 +109,7 @@ export default function PerformanceReport() {
                   <span className="text-ink">{score[key]}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-line-soft">
-                  <div className="h-1.5 rounded-full bg-signal" style={{ width: `${score[key]}%` }} />
+                  <div className="h-1.5 rounded-full bg-signal" style={{ width: `${score[key]}%`}} />
                 </div>
               </div>
             ))}

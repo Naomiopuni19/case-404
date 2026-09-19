@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Panel } from './ui'
-import { incident } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 const FIELDS = [
-  { key: 'incidentType', label: 'Incident Type', placeholder: 'e.g. Credential compromise via phishing' },
+  { key: 'incidentType', label: 'Incident Type', placeholder: 'e.g. Ransomware outbreak via malicious attachment' },
   { key: 'initialAccess', label: 'Initial Access', placeholder: 'How did the attacker get in?' },
   { key: 'affectedUsers', label: 'Affected Users', placeholder: 'Who was impacted?' },
   { key: 'affectedSystems', label: 'Affected Systems', placeholder: 'Which hosts or services?' },
@@ -17,7 +16,7 @@ const FIELDS = [
 ]
 
 export default function IncidentReport() {
-  const { dispatch } = useIncidentEngine()
+  const { state, dispatch } = useIncidentEngine()
   const [report, setReport] = useState(Object.fromEntries(FIELDS.map((f) => [f.key, ''])))
 
   function update(key, value) {
@@ -38,7 +37,7 @@ export default function IncidentReport() {
           <ArrowLeft size={13} /> Back to SOC
         </button>
 
-        <Panel title={`Incident Report - ${incident.id}`} bodyClassName="p-5">
+        <Panel title={`Incident Report - ${state.caseData.incident.id}`} bodyClassName="p-5">
           <div className="flex flex-col gap-4">
             {FIELDS.map((f) => (
               <div key={f.key}>

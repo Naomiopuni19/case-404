@@ -1,10 +1,10 @@
 import { Pin } from 'lucide-react'
 import { Panel } from './ui'
-import { evidencePieces } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 export default function EvidenceBoard() {
   const { state, dispatch } = useIncidentEngine()
+  const { evidencePieces } = state.caseData
   const pinned = state.investigated.evidencePinned
 
   return (
@@ -39,7 +39,7 @@ export default function EvidenceBoard() {
       </div>
       {pinned.length === evidencePieces.length && (
         <p className="mt-3 rounded-md border border-ok/30 bg-ok/10 px-3 py-2 text-[11px] text-ok">
-          Full attack chain reconstructed, from initial phishing email to exfiltration.
+          Full attack chain reconstructed, from initial access to the final stage.
         </p>
       )}
     </Panel>

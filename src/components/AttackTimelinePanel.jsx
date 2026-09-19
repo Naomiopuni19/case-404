@@ -1,14 +1,16 @@
-import { Mail, MousePointerClick, KeyRound, LogIn, TerminalSquare, FileText, UploadCloud } from 'lucide-react'
+import { Mail, MousePointerClick, KeyRound, LogIn, TerminalSquare, FileText, UploadCloud, ShieldOff, Network, Lock } from 'lucide-react'
 import { Panel } from './ui'
-import { attackStages, useIncidentEngine } from '../state/IncidentEngine'
+import { useIncidentEngine } from '../state/IncidentEngine'
 
 const ICONS = {
   mail: Mail, cursor: MousePointerClick, key: KeyRound, login: LogIn,
   terminal: TerminalSquare, file: FileText, upload: UploadCloud,
+  shieldoff: ShieldOff, network: Network, lock: Lock,
 }
 
 export default function AttackTimelinePanel() {
   const { state } = useIncidentEngine()
+  const { attackStages } = state.caseData
   const revealed = attackStages.slice(0, state.stageRevealCount)
 
   return (
@@ -17,7 +19,7 @@ export default function AttackTimelinePanel() {
         {revealed.map((s, i) => {
           const Icon = ICONS[s.icon] || FileText
           const isLast = i === revealed.length - 1
-          const critical = s.id === 'powershell' || s.id === 'exfil'
+          const critical = i === attackStages.length - 2 || i === attackStages.length - 1
           return (
             <div key={s.id} className="flex gap-3">
               <div className="flex flex-col items-center">

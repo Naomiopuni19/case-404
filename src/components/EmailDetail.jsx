@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Panel } from './ui'
-import { email } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 export default function EmailDetail() {
-  const { dispatch } = useIncidentEngine()
+  const { state, dispatch } = useIncidentEngine()
+  const { email } = state.caseData
 
   useEffect(() => {
     dispatch({ type: 'EMAIL_INSPECTED' })

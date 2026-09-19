@@ -1,33 +1,65 @@
-import { IncidentEngineProvider, useIncidentEngine } from './state/IncidentEngine'
-import Landing from './components/Landing'
-import Briefing from './components/Briefing'
-import Dashboard from './components/Dashboard'
-import IncidentReport from './components/IncidentReport'
-import PerformanceReport from './components/PerformanceReport'
+import { IncidentEngineProvider, useIncidentEngine } from "./state/IncidentEngine"
+import { AuthProvider, useAuth } from "./state/AuthContext"
+import Auth from "./components/Auth"
+import Quiz from "./components/Quiz"
+import Landing from "./components/Landing"
+import Learn from "./components/Learn"
+import Profile from "./components/Profile"
+import Briefing from "./components/Briefing"
+import Dashboard from "./components/Dashboard"
+import IncidentReport from "./components/IncidentReport"
+import PerformanceReport from "./components/PerformanceReport"
 
 function Router() {
   const { state } = useIncidentEngine()
 
   switch (state.view) {
-    case 'landing':
+    case "landing":
       return <Landing />
-    case 'briefing':
+    case "learn":
+      return <Learn />
+    case "profile":
+      return <Profile />
+    case "briefing":
       return <Briefing />
-    case 'soc':
+    case "soc":
       return <Dashboard />
-    case 'report':
+    case "report":
       return <IncidentReport />
-    case 'performance':
+    case "performance":
       return <PerformanceReport />
     default:
       return <Landing />
   }
 }
 
-export default function App() {
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-void text-sm text-ink-dim">
+      Loading...
+    </div>
+  )
+}
+
+function Gate() {
+  const { user, profile, loading } = useAuth()
+
+  if (loading) return <LoadingScreen />
+  if (!user) return <Auth />
+  if (!profile) return <LoadingScreen />
+  if (!profile.hired) return <Quiz />
+
   return (
     <IncidentEngineProvider>
       <Router />
     </IncidentEngineProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
   )
 }

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Panel } from './ui'
-import { threatIntel } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 const TABS = ['ip', 'domain', 'hash']
 
 export default function ThreatIntelPanel() {
-  const { dispatch } = useIncidentEngine()
+  const { state, dispatch } = useIncidentEngine()
+  const { threatIntel, defaultThreatIntelQuery } = state.caseData
   const [tab, setTab] = useState('ip')
-  const [query, setQuery] = useState('185.232.41.77')
-  const [result, setResult] = useState(threatIntel.ip['185.232.41.77'])
+  const [query, setQuery] = useState(defaultThreatIntelQuery)
+  const [result, setResult] = useState(threatIntel.ip[defaultThreatIntelQuery])
   const [searched, setSearched] = useState(true)
 
   function runSearch() {
@@ -41,7 +41,7 @@ export default function ThreatIntelPanel() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && runSearch()}
-          placeholder={tab === 'ip' ? '185.232.41.77' : tab === 'domain' ? 'suspicious-domain.com' : 'sha256 hash'}
+          placeholder={tab === 'ip' ? defaultThreatIntelQuery : tab === 'domain' ? 'suspicious-domain.com' : 'sha256 hash'}
           className="min-w-0 flex-1 rounded border border-line bg-panel px-2.5 py-1.5 font-mono text-[11px] text-ink placeholder:text-ink-faint focus:border-signal/50 focus:outline-none"
         />
         <button onClick={runSearch} className="rounded bg-signal px-3 text-[11px] font-medium text-void hover:bg-signal/90">

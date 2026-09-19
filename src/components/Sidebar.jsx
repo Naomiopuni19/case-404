@@ -6,7 +6,7 @@ import { useIncidentEngine } from '../state/IncidentEngine'
 
 const NAV = [
   { id: 'overview', label: 'SOC Dashboard', icon: LayoutDashboard },
-  { id: 'incidents', label: 'Incidents', icon: Siren, badge: 1 },
+  { id: 'incidents', label: 'Incidents', icon: Siren, badge: 2 },
   { id: 'siem', label: 'SIEM', icon: Database },
   { id: 'network', label: 'Network Monitor', icon: Network },
   { id: 'endpoints', label: 'Endpoints', icon: Monitor },

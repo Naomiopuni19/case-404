@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { Panel } from './ui'
-import { siemLogs, threatIntel, incident, attackStages } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 const HELP = `Available commands:
@@ -12,6 +11,7 @@ const HELP = `Available commands:
 
 export default function Terminal() {
   const { state, dispatch } = useIncidentEngine()
+  const { siemLogs, threatIntel, incident, attackStages } = state.caseData
   const [lines, setLines] = useState([
     { type: 'out', text: 'CASE:404 analyst terminal. Type "help" to see available commands.' },
   ])
@@ -38,7 +38,7 @@ export default function Terminal() {
       const user = trimmed.split('=')[1]
       const results = siemLogs.filter((l) => l.user.includes(user))
       out.push({ type: 'out', text: `Found ${results.length} results` })
-      results.slice(0, 6).forEach((r) => out.push({ type: 'out', text: `  ${r.time}  ${r.event}  (${r.sourceIp})` }))
+      results.slice(0, 6).forEach((r) => out.push({ type: 'out', text: `  ${r.time}  ${r.event} (${r.sourceIp})` }))
     } else if (trimmed.startsWith('investigate ip ')) {
       const ip = trimmed.replace('investigate ip ', '')
       const intel = threatIntel.ip[ip]

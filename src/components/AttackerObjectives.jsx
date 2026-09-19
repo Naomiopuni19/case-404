@@ -1,17 +1,10 @@
 import { Check } from 'lucide-react'
 import { Panel } from './ui'
-import { useIncidentEngine, attackStages } from '../state/IncidentEngine'
-
-const objectives = [
-  { n: 1, title: 'Initial Access', sub: 'Phishing / Credential Theft', throughStage: 3 },
-  { n: 2, title: 'Privilege Escalation', sub: 'Exploit vulnerable service', throughStage: 4 },
-  { n: 3, title: 'Lateral Movement', sub: 'Internal network discovery', throughStage: 4 },
-  { n: 4, title: 'Data Access', sub: 'Financial records / Payroll', throughStage: 5 },
-  { n: 5, title: 'Exfiltration', sub: 'External transfer', throughStage: 6 },
-]
+import { useIncidentEngine } from '../state/IncidentEngine'
 
 export default function AttackerObjectives() {
   const { state } = useIncidentEngine()
+  const { objectives } = state.caseData
 
   return (
     <Panel title="Top Attacker Objectives" className="h-full" bodyClassName="overflow-y-auto p-3">

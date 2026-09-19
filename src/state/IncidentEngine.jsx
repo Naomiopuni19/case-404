@@ -1,41 +1,45 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react'
-import {
-  attackStages,
-  liveEvents,
-  laterEvents,
-  actionsCatalog,
-} from '../data/caseData'
+import { cases } from '../data/caseRegistry'
 
-const CRITICAL_ACTIONS = ['disable-account', 'isolate-endpoint', 'block-ip']
-const STAGE_INTERVAL_MS = 25000 // how often the attack advances if uncontained
+const DEFAULT_CASE_ID = 'INC-0042'
 
-const initialState = {
-  startedAt: Date.now(),
-  stageRevealCount: attackStages.filter((s) => s.revealed).length, // 4
-  events: [...liveEvents],
-  contained: false,
-  breached: false, // true if exfiltration stage completed uncontained
-  actionsTaken: [], // { id, at }
-  toasts: [], // transient consequence messages
-  investigated: {
-    siemSearched: false,
-    terminalUsed: false,
-    endpointInspected: false,
-    emailInspected: false,
-    threatIntelLookups: [],
-    evidencePinned: [],
-  },
-  reportSubmitted: false,
-  view: 'landing', // landing | briefing | soc | report | performance
-  activePanel: 'overview',
+function buildInitialState(caseId) {
+  const caseData = cases[caseId]
+  return {
+    caseId,
+    caseData,
+    startedAt: Date.now(),
+    stageRevealCount: caseData.attackStages.filter((s) => s.revealed).length,
+    events: [...caseData.liveEvents],
+    contained: false,
+    breached: false,
+    actionsTaken: [],
+    toasts: [],
+    investigated: {
+      siemSearched: false,
+      terminalUsed: false,
+      endpointInspected: false,
+      emailInspected: false,
+      threatIntelLookups: [],
+      evidencePinned: [],
+    },
+    reportSubmitted: false,
+    report: undefined,
+    view: 'landing',
+    activePanel: 'overview',
+  }
 }
 
-function allCriticalActionsTaken(actionsTaken) {
-  return CRITICAL_ACTIONS.every((id) => actionsTaken.some((a) => a.id === id))
+function allCriticalActionsTaken(actionsTaken, criticalActions) {
+  return criticalActions.every((id) => actionsTaken.some((a) => a.id === id))
 }
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'SELECT_CASE': {
+      if (!cases[action.caseId]) return state
+      return { ...buildInitialState(action.caseId), view: 'briefing' }
+    }
     case 'GO_TO': {
       return { ...state, view: action.view }
     }
@@ -44,27 +48,29 @@ function reducer(state, action) {
     }
     case 'TICK_STAGE': {
       if (state.contained || state.breached) return state
+      const { attackStages, laterEvents, breachToastText } = state.caseData
       const nextIndex = state.stageRevealCount
       if (nextIndex >= attackStages.length) return state
       const newStage = attackStages[nextIndex]
       const newEvents = laterEvents.filter((e) => e.time === newStage.time)
-      const justBreached = newStage.id === 'exfil'
+      const justBreached = nextIndex === attackStages.length - 1
       return {
         ...state,
         stageRevealCount: nextIndex + 1,
         events: [...state.events, ...newEvents],
         breached: justBreached,
         toasts: justBreached
-          ? [...state.toasts, { id: `breach-${Date.now()}`, tone: 'critical', text: 'Attacker completed data exfiltration. Containment came too late for this stage.' }]
+          ? [...state.toasts, { id: `breach-${Date.now()}`, tone: 'critical', text: breachToastText }]
           : state.toasts,
       }
     }
     case 'TAKE_ACTION': {
+      const { actionsCatalog, criticalActions } = state.caseData
       const def = actionsCatalog.find((a) => a.id === action.id)
       if (!def) return state
       if (state.actionsTaken.some((a) => a.id === action.id)) return state
       const actionsTaken = [...state.actionsTaken, { id: action.id, at: Date.now() }]
-      const nowContained = !state.breached && allCriticalActionsTaken(actionsTaken)
+      const nowContained = !state.breached && allCriticalActionsTaken(actionsTaken, criticalActions)
       const toast = { id: `${action.id}-${Date.now()}`, tone: 'ok', text: def.consequence }
       const containedToast = nowContained
         ? [{ id: `contained-${Date.now()}`, tone: 'ok', text: 'Incident contained. The attack chain has been broken.' }]
@@ -114,7 +120,7 @@ function reducer(state, action) {
 const EngineContext = createContext(null)
 
 export function IncidentEngineProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const [state, dispatch] = useReducer(reducer, buildInitialState(DEFAULT_CASE_ID))
   const timerRef = useRef(null)
 
   useEffect(() => {
@@ -122,9 +128,9 @@ export function IncidentEngineProvider({ children }) {
     if (state.contained || state.breached) return
     timerRef.current = setInterval(() => {
       dispatch({ type: 'TICK_STAGE' })
-    }, STAGE_INTERVAL_MS)
+    }, state.caseData.stageIntervalMs)
     return () => clearInterval(timerRef.current)
-  }, [state.view, state.contained, state.breached])
+  }, [state.view, state.contained, state.breached, state.caseId])
 
   return (
     <EngineContext.Provider value={{ state, dispatch }}>
@@ -140,9 +146,10 @@ export function useIncidentEngine() {
 }
 
 export function computeScore(state) {
-  const { investigated, actionsTaken, contained, breached, report } = state
+  const { investigated, actionsTaken, contained, breached, report, caseData } = state
+  const { criticalActions } = caseData
 
-  const detection = 100 // they opened the incident
+  const detection = 100
   const investigation = Math.min(
     100,
     (investigated.siemSearched ? 25 : 0) +
@@ -153,8 +160,8 @@ export function computeScore(state) {
   const correlation = Math.min(100, investigated.evidencePinned.length * 20 + investigated.threatIntelLookups.length * 15)
   const response = Math.min(
     100,
-    actionsTaken.filter((a) => CRITICAL_ACTIONS.includes(a.id)).length * 30 +
-      actionsTaken.filter((a) => !CRITICAL_ACTIONS.includes(a.id)).length * 5
+    actionsTaken.filter((a) => criticalActions.includes(a.id)).length * 30 +
+      actionsTaken.filter((a) => !criticalActions.includes(a.id)).length * 5
   )
   const containment = contained ? 100 : breached ? 35 : 60
   const reportFields = report ? Object.values(report).filter((v) => v && v.trim().length > 0).length : 0
@@ -180,5 +187,3 @@ export function computeScore(state) {
     rating,
   }
 }
-
-export { attackStages }

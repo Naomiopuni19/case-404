@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { Panel, SeverityBadge } from './ui'
-import { siemLogs } from '../data/caseData'
 import { useIncidentEngine } from '../state/IncidentEngine'
 
 export default function SiemSearch() {
-  const { dispatch } = useIncidentEngine()
-  const [query, setQuery] = useState('user:s.mensah')
-  const [results, setResults] = useState(siemLogs.filter((l) => l.user === 's.mensah'))
+  const { state, dispatch } = useIncidentEngine()
+  const { siemLogs, incident } = state.caseData
+  const [query, setQuery] = useState(`user:${incident.affectedUsername}`)
+  const [results, setResults] = useState(siemLogs.filter((l) => l.user === incident.affectedUsername))
 
   function runSearch(value) {
     const q = value.toLowerCase().replace(/^\w+:/, '')
@@ -26,7 +26,7 @@ export default function SiemSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && runSearch(query)}
-          placeholder="user:s.mensah"
+          placeholder={`user:${incident.affectedUsername}`}
           className="flex-1 bg-transparent font-mono text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
         />
         <button onClick={() => runSearch(query)} className="rounded bg-signal px-3 py-1 text-[11px] font-medium text-void hover:bg-signal/90">
