@@ -1,16 +1,53 @@
-# React + Vite
+# CASE:404
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A cybersecurity Security Operations Center (SOC) simulator built for A.F.I.A. Group, a fictional financial services company. You sit down at a live SOC console with real telemetry, alerts, and an incident already in progress. Nobody tells you what happened, you have to find out and respond correctly.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+CASE:404 puts you through the full loop of a working SOC analyst:
 
-## React Compiler
+- **Hiring assessment** - a 40 question, randomized multiple choice quiz on core cybersecurity fundamentals (networking, monitoring, common attacks, incident response). Score 80% or higher to get hired and access the console.
+- **Live incident simulation** - each case is a self contained scenario with SIEM logs, a terminal, threat intelligence lookups, email analysis, endpoint detail, an attack timeline that progresses in real time, and an evidence board to reconstruct what happened.
+- **Scoring engine** - your performance is scored across six categories (detection, investigation, evidence correlation, response, containment, documentation) based on what you actually did during the incident, not a scripted path.
+- **Career profile** - a real account backed by Firebase, tracking your role, virtual salary balance, and solved case history.
+- **Rank progression** - solving cases promotes you from Junior Analyst upward, and each new case can be gated behind passing the previous one at a minimum score.
+- **Learn section** - plain language study notes on IP addressing, subnetting, the TCP/IP model, SIEM and log analysis, IDS/IPS, common attack types, and the incident response lifecycle.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Current cases
 
-## Expanding the Oxlint configuration
+- **Case 001, The Midnight Login** - a credential compromise incident.
+- **Case 002, Silent Spread** - a ransomware outbreak, harder and faster paced than Case 001, requires passing Case 001 at 60% or higher to unlock.
+- **Case 003, Blackout** - coming soon.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+More cases are planned. The architecture supports adding new ones without touching the core engine.
+
+## Tech stack
+
+- React + Vite
+- Tailwind CSS v4
+- Firebase (Authentication and Firestore) for accounts and profiles
+- lucide-react for icons
+
+## Project structure
+src/
+data/
+cases/ Individual case bundles (incident data, SIEM logs, attack stages, etc.)
+caseRegistry.js Maps case IDs to their case bundle
+learnContent.js Notes for the Learn section
+questionBank.js Hiring quiz question pool
+state/
+IncidentEngine.jsx Core simulation state, scoring, and case selection
+AuthContext.jsx Firebase auth, profile, pay, and rank logic
+components/ All UI panels and screens
+lib/
+firebase.js Firebase project configuration
+
+## Running it locally
+npm install
+npm run dev
+
+The app expects a Firebase project with Authentication (Email/Password) and Firestore enabled. Configuration lives in `src/lib/firebase.js`.
+
+## Author
+
+Built by Naomi Opuni (Afia). [github.com/Naomiopuni19](https://github.com/Naomiopuni19)
