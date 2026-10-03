@@ -48,8 +48,11 @@ function Gate() {
   if (loading) return <LoadingScreen />
   if (!user) return <Auth />
   if (!profile) return <LoadingScreen />
-  if (profile.applicationStatus !== "accepted") return <Quiz />
-  if (!profile.hired) return <CandidateProfileForm />
+
+  if (!profile.hired) {
+    if (profile.applicationStatus !== "accepted") return <Quiz />
+    return <CandidateProfileForm />
+  }
 
   return (
     <IncidentEngineProvider>
