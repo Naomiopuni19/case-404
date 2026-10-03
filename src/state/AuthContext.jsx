@@ -8,9 +8,7 @@ import {
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore"
 import { auth, db } from "../lib/firebase"
 
-const STARTING_BALANCE = 0
-const STARTING_ROLE = "Junior Analyst"
-const PAY_PER_CASE = 500
+const AuthContext = createContext(null)
 
 const RANKS = [
   { minCases: 0, role: "Junior Analyst" },
@@ -20,28 +18,32 @@ const RANKS = [
 
 function rankForCaseCount(count) {
   let role = RANKS[0].role
-  for (const r of RANKS) {
-    if (count >= r.minCases) role = r.role
+  for (const tier of RANKS) {
+    if (count >= tier.minCases) role = tier.role
   }
   return role
 }
 
-const AuthContext = createContext(null)
+const PAY_PER_CASE = 500
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser)
+      setError(null)
       if (firebaseUser) {
+        setUser(firebaseUser)
         const ref = doc(db, "profiles", firebaseUser.uid)
         const snap = await getDoc(ref)
-        setProfile(snap.exists() ? snap.data() : null)
+        if (snap.exists()) {
+          setProfile(snap.data())
+        }
       } else {
+        setUser(null)
         setProfile(null)
       }
       setLoading(false)
@@ -50,85 +52,111 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function signUp(email, password) {
-    setError("")
-    const cred = await createUserWithEmailAndPassword(auth, email, password)
-    const ref = doc(db, "profiles", cred.user.uid)
-    const initialProfile = {
-      email,
-      role: STARTING_ROLE,
-      balance: STARTING_BALANCE,
-      casesSolved: [],
-      caseScores: {},
-      hired: false,
-      createdAt: Date.now(),
+    setError(null)
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password)
+      const initialProfile = {
+        email,
+        role: "Junior Analyst",
+        balance: 0,
+        casesSolved: [],
+        caseScores: {},
+        applicationStatus: "pending",
+        candidateProfile: null,
+        hired: false,
+        createdAt: Date.now(),
+      }
+      await setDoc(doc(db, "profiles", cred.user.uid), initialProfile)
+      setProfile(initialProfile)
+    } catch (err) {
+      setError(err.message)
+      throw err
     }
-    await setDoc(ref, initialProfile)
-    setProfile(initialProfile)
   }
 
   async function logIn(email, password) {
-    setError("")
-    await signInWithEmailAndPassword(auth, email, password)
+    setError(null)
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
   }
 
   async function logOut() {
     await signOut(auth)
   }
 
-  async function passQuiz() {
+  async function submitQuizResult(passed) {
     if (!user) return
     const ref = doc(db, "profiles", user.uid)
-    await updateDoc(ref, { hired: true })
-    setProfile((prev) => (prev ? { ...prev, hired: true } : prev))
+    const applicationStatus = passed ? "accepted" : "rejected"
+    await updateDoc(ref, { applicationStatus })
+    setProfile((prev) => ({ ...prev, applicationStatus }))
+  }
+
+  async function resetApplication() {
+    if (!user) return
+    const ref = doc(db, "profiles", user.uid)
+    await updateDoc(ref, { applicationStatus: "pending" })
+    setProfile((prev) => ({ ...prev, applicationStatus: "pending" }))
+  }
+
+  async function saveCandidateProfile(data) {
+    if (!user) return
+    const ref = doc(db, "profiles", user.uid)
+    await updateDoc(ref, { candidateProfile: data, hired: true })
+    setProfile((prev) => ({ ...prev, candidateProfile: data, hired: true }))
   }
 
   async function recordCaseSolved(caseId, overallScore) {
-    if (!user) return
-    if (profile && profile.casesSolved && profile.casesSolved.includes(caseId)) return
+    if (!user || !profile) return { pay: 0, promoted: false, newRole: profile?.role }
+    if (profile.casesSolved.includes(caseId)) {
+      return { pay: 0, promoted: false, newRole: profile.role, alreadyLogged: true }
+    }
+
+    const pay = PAY_PER_CASE + Math.round(overallScore * 5)
+    const newCasesSolved = [...profile.casesSolved, caseId]
+    const newRole = rankForCaseCount(newCasesSolved.length)
+    const promoted = newRole !== profile.role
 
     const ref = doc(db, "profiles", user.uid)
-    const pay = PAY_PER_CASE + Math.round(overallScore * 5)
-    const previousCases = profile?.casesSolved || []
-    const newCases = [...previousCases, caseId]
-    const previousRole = profile?.role || STARTING_ROLE
-    const newRole = rankForCaseCount(newCases.length)
-    const promoted = newRole !== previousRole
-    const previousScores = profile?.caseScores || {}
-    const newScores = { ...previousScores, [caseId]: overallScore }
-
-    const updates = {
+    await updateDoc(ref, {
       casesSolved: arrayUnion(caseId),
       balance: increment(pay),
-      caseScores: newScores,
-    }
-    if (promoted) updates.role = newRole
+      [`caseScores.${caseId}`]: overallScore,
+      role: newRole,
+    })
 
-    await updateDoc(ref, updates)
-
-    setProfile((prev) =>
-      prev
-        ? {
-            ...prev,
-            casesSolved: newCases,
-            balance: prev.balance + pay,
-            role: promoted ? newRole : prev.role,
-            caseScores: newScores,
-          }
-        : prev
-    )
+    setProfile((prev) => ({
+      ...prev,
+      casesSolved: newCasesSolved,
+      balance: prev.balance + pay,
+      caseScores: { ...prev.caseScores, [caseId]: overallScore },
+      role: newRole,
+    }))
 
     return { pay, promoted, newRole }
   }
 
-  return (
-    <AuthContext.Provider value={{ user, profile, loading, error, setError, signUp, logIn, logOut, passQuiz, recordCaseSolved }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  const value = {
+    user,
+    profile,
+    loading,
+    error,
+    signUp,
+    logIn,
+    logOut,
+    submitQuizResult,
+    resetApplication,
+    saveCandidateProfile,
+    recordCaseSolved,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider")
-  return ctx
+  return useContext(AuthContext)
 }

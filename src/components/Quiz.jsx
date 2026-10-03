@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react"
-import { ShieldCheck, ShieldAlert, RotateCcw } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { ShieldCheck, Mail, RotateCcw } from "lucide-react"
 import { useAuth } from "../state/AuthContext"
 import { questionBank } from "../data/questionBank"
+import { sendDecisionEmail } from "../lib/emailjs"
 
 const QUIZ_SIZE = 20
 const PASS_PERCENT = 80
+const DECISION_DELAY_MS = 9000
 
 function shuffle(array) {
   const copy = [...array]
@@ -16,77 +18,123 @@ function shuffle(array) {
 }
 
 function buildQuizSet() {
-  const chosen = shuffle(questionBank).slice(0, QUIZ_SIZE)
-  return chosen.map((q) => {
-    const optionOrder = shuffle(q.options.map((opt, i) => ({ opt, i })))
-    const options = optionOrder.map((o) => o.opt)
-    const correctIndex = optionOrder.findIndex((o) => o.i === q.correctIndex)
-    return { id: q.id, question: q.question, options, correctIndex }
+  const picked = shuffle(questionBank).slice(0, QUIZ_SIZE)
+  return picked.map((q) => {
+    const optionOrder = shuffle(q.options.map((text, idx) => ({ text, idx })))
+    return {
+      id: q.id,
+      category: q.category,
+      question: q.question,
+      options: optionOrder.map((o) => o.text),
+      correctIndex: optionOrder.findIndex((o) => o.idx === q.correctIndex),
+    }
   })
 }
 
 export default function Quiz() {
-  const { passQuiz } = useAuth()
+  const { user, profile, submitQuizResult } = useAuth()
   const [attempt, setAttempt] = useState(0)
-  const questions = useMemo(() => buildQuizSet(), [attempt])
+  const [stage, setStage] = useState("quiz")
   const [answers, setAnswers] = useState({})
-  const [submitted, setSubmitted] = useState(false)
-  const [result, setResult] = useState(null)
+  const [passed, setPassed] = useState(false)
 
-  function selectAnswer(qId, optionIndex) {
-    if (submitted) return
-    setAnswers((prev) => ({ ...prev, [qId]: optionIndex }))
+  const quizSet = useMemo(() => buildQuizSet(), [attempt])
+
+  function selectAnswer(questionId, optionIndex) {
+    setAnswers((prev) => ({ ...prev, [questionId]: optionIndex }))
   }
 
-  async function handleSubmit() {
-    const correctCount = questions.filter((q) => answers[q.id] === q.correctIndex).length
-    const percent = Math.round((correctCount / questions.length) * 100)
-    const passed = percent >= PASS_PERCENT
-    setResult({ correctCount, total: questions.length, percent, passed })
-    setSubmitted(true)
-    if (passed) {
-      await passQuiz()
-    }
+  function submit() {
+    const correctCount = quizSet.reduce(
+      (sum, q) => (answers[q.id] === q.correctIndex ? sum + 1 : sum),
+      0
+    )
+    const percent = Math.round((correctCount / quizSet.length) * 100)
+    const didPass = percent >= PASS_PERCENT
+    setPassed(didPass)
+    setStage("submitted")
   }
 
-  function retry() {
+  useEffect(() => {
+    if (stage !== "submitted") return
+    const timer = setTimeout(async () => {
+      try {
+        await sendDecisionEmail({
+          toEmail: profile?.email || user?.email,
+          toName: profile?.email ? profile.email.split("@")[0] : "Candidate",
+          passed,
+        })
+      } catch (err) {
+        console.error("Decision email failed to send", err)
+      }
+      setStage("decided")
+    }, DECISION_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [stage])
+
+  async function continueToProfile() {
+    await submitQuizResult(true)
+  }
+
+  function tryAgain() {
     setAnswers({})
-    setSubmitted(false)
-    setResult(null)
+    setStage("quiz")
     setAttempt((a) => a + 1)
   }
 
   const answeredCount = Object.keys(answers).length
 
-  if (submitted && result) {
+  if (stage === "submitted") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-void px-6 text-ink">
-        <div className="w-full max-w-md rounded-lg border border-line bg-panel/70 p-8 text-center">
-          {result.passed ? (
-            <ShieldCheck size={32} className="mx-auto text-ok" />
-          ) : (
-            <ShieldAlert size={32} className="mx-auto text-critical" />
-          )}
-          <h1 className="mt-4 text-xl font-semibold text-ink">
-            {result.passed ? "Welcome to A.F.I.A." : "Not quite there yet"}
-          </h1>
-          <p className="mt-2 text-[13px] text-ink-dim">
-            You scored {result.correctCount} out of {result.total} ({result.percent}%). You need {PASS_PERCENT}% to pass.
-          </p>
-          {result.passed ? (
-            <p className="mt-4 text-[13px] text-ok">
-              You have been hired as a Junior Analyst. Loading your console...
+      <div className="flex min-h-screen flex-col items-center justify-center bg-void px-6 text-center text-ink">
+        <Mail size={36} className="mb-5 text-signal" />
+        <h1 className="text-2xl font-semibold">Application Received</h1>
+        <p className="mt-3 max-w-md text-sm text-ink-dim">
+          Thank you for completing the A.F.I.A. Group Security Operations Center Analyst
+          assessment. Our recruitment team is reviewing your responses. You will receive an
+          email with our decision shortly.
+        </p>
+        <div className="mt-8 h-1 w-48 overflow-hidden rounded-full bg-panel">
+          <div className="h-full w-1/3 animate-pulse bg-signal" />
+        </div>
+      </div>
+    )
+  }
+
+  if (stage === "decided") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-void px-6 text-center text-ink">
+        {passed ? (
+          <>
+            <ShieldCheck size={36} className="mb-5 text-ok" />
+            <h1 className="text-2xl font-semibold">You have been selected to move forward</h1>
+            <p className="mt-3 max-w-md text-sm text-ink-dim">
+              Check your inbox for the official decision email. To finish onboarding, complete
+              your candidate profile next.
             </p>
-          ) : (
             <button
-              onClick={retry}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-signal px-4 py-2.5 text-sm font-medium text-void transition hover:bg-signal/90"
+              onClick={continueToProfile}
+              className="mt-8 rounded-md bg-signal px-5 py-2.5 text-sm font-medium text-void transition hover:bg-signal/90"
             >
-              <RotateCcw size={14} />
+              Continue to Candidate Profile
+            </button>
+          </>
+        ) : (
+          <>
+            <RotateCcw size={36} className="mb-5 text-ink-dim" />
+            <h1 className="text-2xl font-semibold">Not selected this time</h1>
+            <p className="mt-3 max-w-md text-sm text-ink-dim">
+              Check your inbox for the official decision email. After careful review, we are not
+              moving forward with your application at this time. You are welcome to try again.
+            </p>
+            <button
+              onClick={tryAgain}
+              className="mt-8 rounded-md border border-line bg-panel px-5 py-2.5 text-sm font-medium text-ink transition hover:bg-panel-raised"
+            >
               Try Again with New Questions
             </button>
-          )}
-        </div>
+          </>
+        )}
       </div>
     )
   }
@@ -94,26 +142,26 @@ export default function Quiz() {
   return (
     <div className="min-h-screen bg-void px-6 py-10 text-ink">
       <div className="mx-auto max-w-2xl">
-        <p className="font-mono text-[11px] tracking-[0.2em] text-signal">A.F.I.A. HIRING ASSESSMENT</p>
-        <h1 className="mt-1.5 text-2xl font-semibold text-ink">Cybersecurity Fundamentals Quiz</h1>
-        <p className="mt-2 text-[13px] text-ink-dim">
-          Answer these questions to show you know the basics before stepping into the SOC. You need {PASS_PERCENT}% to pass. Questions are randomized every attempt.
+        <h1 className="text-xl font-semibold">Security Operations Center Analyst Assessment</h1>
+        <p className="mt-2 text-sm text-ink-dim">
+          Answer all {quizSet.length} questions. {answeredCount}/{quizSet.length} answered.
         </p>
-        <p className="mt-3 text-[12px] text-ink-faint">{answeredCount} of {questions.length} answered</p>
 
-        <div className="mt-6 space-y-4">
-          {questions.map((q, idx) => (
-            <div key={q.id} className="rounded-lg border border-line bg-panel/70 p-4">
-              <p className="text-[13px] font-medium text-ink">{idx + 1}. {q.question}</p>
+        <div className="mt-8 space-y-6">
+          {quizSet.map((q, qi) => (
+            <div key={q.id} className="rounded-lg border border-line bg-panel/70 p-5">
+              <p className="text-sm font-medium text-ink">
+                {qi + 1}. {q.question}
+              </p>
               <div className="mt-3 space-y-2">
-                {q.options.map((opt, i) => (
+                {q.options.map((opt, oi) => (
                   <button
-                    key={i}
-                    onClick={() => selectAnswer(q.id, i)}
-                    className={`block w-full rounded-md border px-3 py-2 text-left text-[13px] transition ${
-                      answers[q.id] === i
+                    key={oi}
+                    onClick={() => selectAnswer(q.id, oi)}
+                    className={`block w-full rounded-md border px-3 py-2 text-left text-sm transition ${
+                      answers[q.id] === oi
                         ? "border-signal bg-signal/10 text-ink"
-                        : "border-line-soft bg-panel text-ink-dim hover:bg-panel-raised hover:text-ink"
+                        : "border-line text-ink-dim hover:bg-panel-raised"
                     }`}
                   >
                     {opt}
@@ -125,11 +173,11 @@ export default function Quiz() {
         </div>
 
         <button
-          onClick={handleSubmit}
-          disabled={answeredCount < questions.length}
-          className="sticky bottom-6 mt-6 w-full rounded-md bg-signal px-4 py-3 text-sm font-medium text-void transition hover:bg-signal/90 disabled:opacity-40"
+          onClick={submit}
+          disabled={answeredCount < quizSet.length}
+          className="mt-8 w-full rounded-md bg-signal px-5 py-3 text-sm font-medium text-void transition hover:bg-signal/90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Submit Assessment
+          Submit Application Assessment
         </button>
       </div>
     </div>

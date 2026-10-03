@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldAlert, LogOut, Briefcase, Wallet, CheckCircle2 } from "lucide-react"
+import { LogOut, ArrowLeft, Wallet, Award, User } from "lucide-react"
 import { useAuth } from "../state/AuthContext"
 import { useIncidentEngine } from "../state/IncidentEngine"
 
@@ -11,72 +11,105 @@ export default function Profile() {
   const { profile, logOut } = useAuth()
   const { dispatch } = useIncidentEngine()
 
-  if (!profile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-void text-sm text-ink-dim">
-        Loading profile...
-      </div>
-    )
-  }
+  if (!profile) return null
 
-  const solved = profile.casesSolved || []
+  const cp = profile.candidateProfile
 
   return (
-    <div className="min-h-screen bg-void text-ink">
-      <header className="flex items-center justify-between border-b border-line px-8 py-4 md:px-16">
-        <div className="flex items-center gap-2.5">
-          <ShieldAlert size={16} className="text-signal" />
-          <span className="font-mono text-sm font-semibold tracking-[0.2em] text-ink">CASE:404 PROFILE</span>
-        </div>
+    <div className="min-h-screen bg-void px-6 py-10 text-ink">
+      <div className="mx-auto max-w-2xl">
         <button
           onClick={() => dispatch({ type: "GO_TO", view: "landing" })}
-          className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs text-ink-dim transition hover:bg-panel hover:text-ink"
+          className="flex items-center gap-2 text-sm text-ink-dim transition hover:text-ink"
         >
-          <ArrowLeft size={13} />
+          <ArrowLeft size={15} />
           Back
         </button>
-      </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-10 md:px-16">
-        <p className="font-mono text-[11px] tracking-[0.2em] text-signal">{profile.email}</p>
-        <h1 className="mt-1.5 text-2xl font-semibold text-ink">Analyst Profile</h1>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-line bg-panel/70 p-5">
-            <div className="flex items-center gap-2 text-ink-faint">
-              <Briefcase size={14} />
-              <p className="text-[11px] font-semibold tracking-wide">ROLE</p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-ink">{profile.role}</p>
+        <div className="mt-6 flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-signal/15">
+            <User size={24} className="text-signal" />
           </div>
-
-          <div className="rounded-lg border border-line bg-panel/70 p-5">
-            <div className="flex items-center gap-2 text-ink-faint">
-              <Wallet size={14} />
-              <p className="text-[11px] font-semibold tracking-wide">BALANCE</p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-ok">GHS {profile.balance.toLocaleString()}</p>
-          </div>
-
-          <div className="rounded-lg border border-line bg-panel/70 p-5">
-            <div className="flex items-center gap-2 text-ink-faint">
-              <CheckCircle2 size={14} />
-              <p className="text-[11px] font-semibold tracking-wide">CASES SOLVED</p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-ink">{solved.length}</p>
+          <div>
+            <h1 className="text-xl font-semibold">{cp?.fullName || profile.email}</h1>
+            <p className="text-sm text-ink-dim">{profile.role}</p>
           </div>
         </div>
 
+        <div className="mt-8 grid grid-cols-2 gap-4">
+          <div className="rounded-lg border border-line bg-panel/70 p-4">
+            <div className="flex items-center gap-2 text-ink-dim">
+              <Wallet size={14} />
+              <span className="text-[11px] tracking-wide">BALANCE</span>
+            </div>
+            <p className="mt-2 text-lg font-semibold">GHS {profile.balance}</p>
+          </div>
+          <div className="rounded-lg border border-line bg-panel/70 p-4">
+            <div className="flex items-center gap-2 text-ink-dim">
+              <Award size={14} />
+              <span className="text-[11px] tracking-wide">CASES SOLVED</span>
+            </div>
+            <p className="mt-2 text-lg font-semibold">{profile.casesSolved.length}</p>
+          </div>
+        </div>
+
+        {cp && (
+          <div className="mt-8 rounded-lg border border-line bg-panel/70 p-5">
+            <h2 className="text-[11px] font-semibold tracking-wide text-ink-dim">EMPLOYEE DETAILS</h2>
+            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-[11px] text-ink-faint">Phone</p>
+                <p className="mt-0.5 text-ink">{cp.phone}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-ink-faint">Location</p>
+                <p className="mt-0.5 text-ink">{cp.location}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-ink-faint">Role Interest</p>
+                <p className="mt-0.5 text-ink">{cp.roleInterest}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-ink-faint">Education</p>
+                <p className="mt-0.5 text-ink">{cp.education}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-ink-faint">Field of Study</p>
+                <p className="mt-0.5 text-ink">{cp.fieldOfStudy}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-ink-faint">Graduation Year</p>
+                <p className="mt-0.5 text-ink">{cp.graduationYear}</p>
+              </div>
+            </div>
+            {cp.skills?.length > 0 && (
+              <div className="mt-4">
+                <p className="text-[11px] text-ink-faint">Skills</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {cp.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-dim"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="mt-8 rounded-lg border border-line bg-panel/70 p-5">
-          <p className="mb-3 text-[11px] font-semibold tracking-wide text-ink-faint">CASE HISTORY</p>
-          {solved.length === 0 ? (
-            <p className="text-[13px] text-ink-dim">No cases solved yet. Head back to the SOC console to start your first incident.</p>
+          <h2 className="text-[11px] font-semibold tracking-wide text-ink-dim">CASE HISTORY</h2>
+          {profile.casesSolved.length === 0 ? (
+            <p className="mt-3 text-sm text-ink-faint">No cases solved yet.</p>
           ) : (
-            <ul className="space-y-2">
-              {solved.map((caseId) => (
-                <li key={caseId} className="flex items-center justify-between rounded-md border border-line-soft bg-panel px-3 py-2">
-                  <span className="text-[13px] text-ink">{CASE_LABELS[caseId] || caseId}</span>
-                  <span className="font-mono text-[10px] text-ink-faint">{caseId}</span>
+            <ul className="mt-3 space-y-2">
+              {profile.casesSolved.map((caseId) => (
+                <li key={caseId} className="flex items-center justify-between text-sm">
+                  <span className="text-ink">{CASE_LABELS[caseId] || caseId}</span>
+                  <span className="text-ink-dim">{profile.caseScores?.[caseId]}%</span>
                 </li>
               ))}
             </ul>
@@ -85,12 +118,12 @@ export default function Profile() {
 
         <button
           onClick={logOut}
-          className="mt-8 flex items-center gap-2 rounded-md border border-line px-4 py-2 text-[13px] text-ink-dim transition hover:bg-panel hover:text-critical"
+          className="mt-8 flex items-center gap-2 rounded-md border border-line bg-panel px-4 py-2 text-sm text-ink-dim transition hover:bg-panel-raised hover:text-ink"
         >
           <LogOut size={14} />
           Log Out
         </button>
-      </main>
+      </div>
     </div>
   )
 }

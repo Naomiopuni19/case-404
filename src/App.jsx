@@ -2,6 +2,7 @@ import { IncidentEngineProvider, useIncidentEngine } from "./state/IncidentEngin
 import { AuthProvider, useAuth } from "./state/AuthContext"
 import Auth from "./components/Auth"
 import Quiz from "./components/Quiz"
+import CandidateProfileForm from "./components/CandidateProfileForm"
 import Landing from "./components/Landing"
 import Learn from "./components/Learn"
 import Profile from "./components/Profile"
@@ -35,8 +36,8 @@ function Router() {
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-void text-sm text-ink-dim">
-      Loading...
+    <div className="flex min-h-screen items-center justify-center bg-void text-ink-dim">
+      <p className="text-sm">Loading...</p>
     </div>
   )
 }
@@ -47,7 +48,8 @@ function Gate() {
   if (loading) return <LoadingScreen />
   if (!user) return <Auth />
   if (!profile) return <LoadingScreen />
-  if (!profile.hired) return <Quiz />
+  if (profile.applicationStatus !== "accepted") return <Quiz />
+  if (!profile.hired) return <CandidateProfileForm />
 
   return (
     <IncidentEngineProvider>
