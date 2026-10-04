@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { LogOut, ArrowLeft, Wallet, Award, User } from "lucide-react"
+import { LogOut, ArrowLeft, Wallet, Award, User, Siren } from "lucide-react"
 import { useAuth } from "../state/AuthContext"
 import { useIncidentEngine } from "../state/IncidentEngine"
 
@@ -166,13 +166,22 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-void px-6 py-10 text-ink">
       <div className="mx-auto max-w-2xl">
-        <button
-          onClick={() => dispatch({ type: "GO_TO", view: "landing" })}
-          className="flex items-center gap-2 text-sm text-ink-dim transition hover:text-ink"
-        >
-          <ArrowLeft size={15} />
-          Back
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => dispatch({ type: "GO_TO", view: "landing" })}
+            className="flex items-center gap-2 text-sm text-ink-dim transition hover:text-ink"
+          >
+            <ArrowLeft size={15} />
+            Back
+          </button>
+          <button
+            onClick={() => dispatch({ type: "GO_TO", view: "feed" })}
+            className="flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-[13px] text-ink-dim transition hover:bg-panel-raised hover:text-ink"
+          >
+            <Siren size={14} className="text-signal" />
+            Live Threat Feed
+          </button>
+        </div>
 
         <div className="mt-6 flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-signal/15">
