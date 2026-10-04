@@ -1,5 +1,7 @@
+import { useState } from "react"
 import { IncidentEngineProvider, useIncidentEngine } from "./state/IncidentEngine"
 import { AuthProvider, useAuth } from "./state/AuthContext"
+import CareersLanding from "./components/CareersLanding"
 import Auth from "./components/Auth"
 import Quiz from "./components/Quiz"
 import CandidateProfileForm from "./components/CandidateProfileForm"
@@ -66,9 +68,22 @@ function LoadingScreen() {
 
 function Gate() {
   const { user, profile, loading } = useAuth()
+  const [authStage, setAuthStage] = useState("careers")
 
   if (loading) return <LoadingScreen />
-  if (!user) return <Auth />
+
+  if (!user) {
+    if (authStage === "careers") {
+      return (
+        <CareersLanding
+          onApply={() => setAuthStage("signup")}
+          onLogin={() => setAuthStage("login")}
+        />
+      )
+    }
+    return <Auth initialMode={authStage} onBack={() => setAuthStage("careers")} />
+  }
+
   if (!profile) return <LoadingScreen />
 
   if (!profile.hired) {

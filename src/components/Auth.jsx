@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { ShieldAlert } from "lucide-react"
+import { ShieldAlert, ArrowLeft } from "lucide-react"
 import { useAuth } from "../state/AuthContext"
 
-export default function Auth() {
+export default function Auth({ initialMode = "login", onBack }) {
   const { signUp, logIn, error, setError } = useAuth()
-  const [mode, setMode] = useState("login")
+  const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -29,6 +29,16 @@ export default function Auth() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-void px-6 text-ink">
       <div className="w-full max-w-sm rounded-lg border border-line bg-panel/70 p-8">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mb-5 flex items-center gap-1.5 text-[12px] text-ink-dim transition hover:text-ink"
+          >
+            <ArrowLeft size={13} />
+            Back to careers page
+          </button>
+        )}
+
         <div className="mb-6 flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-signal/15">
             <ShieldAlert size={16} className="text-signal" />
