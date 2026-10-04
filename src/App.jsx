@@ -6,32 +6,54 @@ import CandidateProfileForm from "./components/CandidateProfileForm"
 import Landing from "./components/Landing"
 import Learn from "./components/Learn"
 import Profile from "./components/Profile"
+import ThreatFeed from "./components/ThreatFeed"
+import MentorChat from "./components/MentorChat"
 import Briefing from "./components/Briefing"
 import Dashboard from "./components/Dashboard"
 import IncidentReport from "./components/IncidentReport"
 import PerformanceReport from "./components/PerformanceReport"
 
+const MENTOR_VIEWS = ["briefing", "soc", "report", "performance"]
+
 function Router() {
   const { state } = useIncidentEngine()
 
+  let content
   switch (state.view) {
     case "landing":
-      return <Landing />
+      content = <Landing />
+      break
     case "learn":
-      return <Learn />
+      content = <Learn />
+      break
     case "profile":
-      return <Profile />
+      content = <Profile />
+      break
+    case "feed":
+      content = <ThreatFeed />
+      break
     case "briefing":
-      return <Briefing />
+      content = <Briefing />
+      break
     case "soc":
-      return <Dashboard />
+      content = <Dashboard />
+      break
     case "report":
-      return <IncidentReport />
+      content = <IncidentReport />
+      break
     case "performance":
-      return <PerformanceReport />
+      content = <PerformanceReport />
+      break
     default:
-      return <Landing />
+      content = <Landing />
   }
+
+  return (
+    <>
+      {content}
+      {MENTOR_VIEWS.includes(state.view) && <MentorChat />}
+    </>
+  )
 }
 
 function LoadingScreen() {
