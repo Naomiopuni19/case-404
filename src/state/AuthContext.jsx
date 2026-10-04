@@ -30,11 +30,10 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setError(null)
       if (firebaseUser) {
         setUser(firebaseUser)
         const ref = doc(db, "profiles", firebaseUser.uid)
@@ -52,36 +51,24 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function signUp(email, password) {
-    setError(null)
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password)
-      const initialProfile = {
-        email,
-        role: "Junior Analyst",
-        balance: 0,
-        casesSolved: [],
-        caseScores: {},
-        applicationStatus: "pending",
-        candidateProfile: null,
-        hired: false,
-        createdAt: Date.now(),
-      }
-      await setDoc(doc(db, "profiles", cred.user.uid), initialProfile)
-      setProfile(initialProfile)
-    } catch (err) {
-      setError(err.message)
-      throw err
+    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    const initialProfile = {
+      email,
+      role: "Junior Analyst",
+      balance: 0,
+      casesSolved: [],
+      caseScores: {},
+      applicationStatus: "pending",
+      candidateProfile: null,
+      hired: false,
+      createdAt: Date.now(),
     }
+    await setDoc(doc(db, "profiles", cred.user.uid), initialProfile)
+    setProfile(initialProfile)
   }
 
   async function logIn(email, password) {
-    setError(null)
-    try {
-      await signInWithEmailAndPassword(auth, email, password)
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
+    await signInWithEmailAndPassword(auth, email, password)
   }
 
   async function logOut() {
@@ -145,6 +132,7 @@ export function AuthProvider({ children }) {
     profile,
     loading,
     error,
+    setError,
     signUp,
     logIn,
     logOut,
