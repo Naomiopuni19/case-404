@@ -1,19 +1,19 @@
 import {
   LayoutDashboard, Siren, Database, Network, Monitor, Mail,
-  ShieldAlert, FolderClosed, FileBarChart,
-} from 'lucide-react'
-import { useIncidentEngine } from '../state/IncidentEngine'
+  ShieldAlert, FolderClosed, FileBarChart, UserCircle,
+} from "lucide-react"
+import { useIncidentEngine } from "../state/IncidentEngine"
 
 const NAV = [
-  { id: 'overview', label: 'SOC Dashboard', icon: LayoutDashboard },
-  { id: 'incidents', label: 'Incidents', icon: Siren, badge: 2 },
-  { id: 'siem', label: 'SIEM', icon: Database },
-  { id: 'network', label: 'Network Monitor', icon: Network },
-  { id: 'endpoints', label: 'Endpoints', icon: Monitor },
-  { id: 'email', label: 'Email Analysis', icon: Mail },
-  { id: 'intel', label: 'Threat Intelligence', icon: ShieldAlert },
-  { id: 'files', label: 'Case Files', icon: FolderClosed },
-  { id: 'reports', label: 'Reports', icon: FileBarChart },
+  { id: "overview", label: "SOC Dashboard", icon: LayoutDashboard },
+  { id: "incidents", label: "Incidents", icon: Siren, badge: 2 },
+  { id: "siem", label: "SIEM", icon: Database },
+  { id: "network", label: "Network Monitor", icon: Network },
+  { id: "endpoints", label: "Endpoints", icon: Monitor },
+  { id: "email", label: "Email Analysis", icon: Mail },
+  { id: "intel", label: "Threat Intelligence", icon: ShieldAlert },
+  { id: "files", label: "Case Files", icon: FolderClosed },
+  { id: "reports", label: "Reports", icon: FileBarChart },
 ]
 
 export default function Sidebar() {
@@ -38,12 +38,12 @@ export default function Sidebar() {
           return (
             <button
               key={item.id}
-              onClick={() => dispatch({ type: 'SET_PANEL', panel: item.id })}
+              onClick={() => dispatch({ type: "SET_PANEL", panel: item.id })}
               className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] transition ${
-                active ? 'bg-panel-raised text-ink' : 'text-ink-dim hover:bg-panel/60 hover:text-ink'
+                active ? "bg-panel-raised text-ink" : "text-ink-dim hover:bg-panel/60 hover:text-ink"
               }`}
             >
-              <Icon size={15} className={active ? 'text-signal' : ''} />
+              <Icon size={15} className={active ? "text-signal" : ""} />
               <span className="flex-1">{item.label}</span>
               {item.badge && (
                 <span className="rounded bg-critical/20 px-1.5 py-0.5 text-[10px] font-semibold text-critical">
@@ -53,6 +53,14 @@ export default function Sidebar() {
             </button>
           )
         })}
+
+        <button
+          onClick={() => dispatch({ type: "GO_TO", view: "profile" })}
+          className="mt-1 flex items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] text-ink-dim transition hover:bg-panel/60 hover:text-ink"
+        >
+          <UserCircle size={15} />
+          <span className="flex-1">My Profile</span>
+        </button>
       </nav>
 
       <div className="mt-6 border-t border-line-soft pt-4 px-2">
