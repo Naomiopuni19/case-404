@@ -24,7 +24,7 @@ export default function MentorChat() {
         body: JSON.stringify({
           message: text,
           history: nextMessages.slice(0, -1).map((m) => ({ role: m.role, content: m.content })),
-          caseContext: state.caseData?.incident?.title || state.caseId,
+          caseContext: state.caseData?.incident?.caseName || state.caseId,
         }),
       })
       const data = await res.json()

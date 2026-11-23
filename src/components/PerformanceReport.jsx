@@ -76,7 +76,7 @@ export default function PerformanceReport() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            caseName: state.caseData?.incident?.title || state.caseId,
+            caseName: state.caseData?.incident?.caseName || state.caseId,
             caseType: state.caseData?.incident?.type || "Security Incident",
             severity: state.caseData?.incident?.severity || "Unknown",
             reportFields: state.report || {},

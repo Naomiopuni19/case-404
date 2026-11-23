@@ -6,6 +6,7 @@ import { useIncidentEngine } from "../state/IncidentEngine"
 const CASE_LABELS = {
   "INC-0042": "The Midnight Login",
   "INC-0043": "Silent Spread",
+  "INC-0044": "Blackout",
 }
 
 const SKILL_OPTIONS = [
