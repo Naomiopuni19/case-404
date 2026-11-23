@@ -8,8 +8,8 @@ const UNLOCK_THRESHOLD = 60
 
 const CASE_TILES = [
   { tag: "CASE 001", name: "The Midnight Login", desc: "Credential compromise", caseId: "INC-0042", built: true, requires: null },
-  { tag: "CASE 002", name: "Silent Spread", desc: "Ransomware outbreak", caseId: "INC-0043", built: true, requires: { caseId: "INC-0042", minScore: UNLOCK_THRESHOLD } },
-  { tag: "CASE 003", name: "Blackout", desc: "Coming soon", caseId: null, built: false, requires: null },
+  { tag: "CASE 002", name: "Silent Spread", desc: "Ransomware outbreak", caseId: "INC-0043", built: true, requires: { caseId: "INC-0042", tag: "CASE 001", minScore: UNLOCK_THRESHOLD } },
+  { tag: "CASE 003", name: "Blackout", desc: "Insider threat", caseId: "INC-0044", built: true, requires: { caseId: "INC-0043", tag: "CASE 002", minScore: UNLOCK_THRESHOLD } },
 ]
 
 function isTileUnlocked(tile, profile) {
@@ -61,7 +61,7 @@ export default function Landing() {
           <div className="flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 sm:gap-2.5">
             <Radio size={15} className="text-ok" />
             <span className="text-sm tracking-wide text-ink-dim sm:text-base">
-              <span className="font-semibold text-ink">A.F.I.A.</span> Group - Security Operations
+              <span className="font-semibold text-ink">A.F.I.A.</span> Group, Security Operations
             </span>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function Landing() {
             if (!unlocked) {
               const lockReason = !tile.built
                 ? tile.desc
-                : `Pass CASE 001 with ${UNLOCK_THRESHOLD}%+ to unlock`
+                : `Pass ${tile.requires.tag} with ${tile.requires.minScore}%+ to unlock`
               return (
                 <div key={tile.tag} className="bg-panel px-5 py-4 opacity-40">
                   <div className="flex items-center gap-1.5">
