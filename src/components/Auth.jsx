@@ -5,6 +5,7 @@ import { useAuth } from "../state/AuthContext"
 export default function Auth({ initialMode = "login", onBack }) {
   const { signUp, logIn, error, setError } = useAuth()
   const [mode, setMode] = useState(initialMode)
+  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -15,7 +16,7 @@ export default function Auth({ initialMode = "login", onBack }) {
     setError("")
     try {
       if (mode === "signup") {
-        await signUp(email, password)
+        await signUp(email, password, fullName.trim())
       } else {
         await logIn(email, password)
       }
@@ -45,7 +46,7 @@ export default function Auth({ initialMode = "login", onBack }) {
           </div>
           <div>
             <p className="font-mono text-sm font-semibold tracking-[0.15em] text-ink">CASE:404</p>
-            <p className="text-[10px] text-ink-faint">A.F.I.A. Group - Security Operations</p>
+            <p className="text-[10px] text-ink-faint">A.F.I.A. Group, Security Operations</p>
           </div>
         </div>
 
@@ -59,6 +60,18 @@ export default function Auth({ initialMode = "login", onBack }) {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+          {mode === "signup" && (
+            <div>
+              <label className="mb-1 block text-[11px] font-medium tracking-wide text-ink-faint">FULL NAME</label>
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full rounded-md border border-line bg-panel px-3 py-2 text-sm text-ink outline-none focus:border-signal"
+              />
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-[11px] font-medium tracking-wide text-ink-faint">EMAIL</label>
             <input

@@ -50,10 +50,11 @@ export function AuthProvider({ children }) {
     return unsub
   }, [])
 
-  async function signUp(email, password) {
+  async function signUp(email, password, fullName) {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
     const initialProfile = {
       email,
+      fullName: fullName || "",
       role: "Junior Analyst",
       balance: 0,
       casesSolved: [],

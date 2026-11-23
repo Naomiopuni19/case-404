@@ -61,7 +61,7 @@ export default function Quiz() {
       try {
         await sendDecisionEmail({
           toEmail: profile?.email || user?.email,
-          toName: profile?.email ? profile.email.split("@")[0] : "Candidate",
+          toName: profile?.fullName ? profile.fullName.split(" ")[0] : "Candidate",
           passed,
         })
       } catch (err) {
