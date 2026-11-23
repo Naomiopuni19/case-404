@@ -12,16 +12,26 @@ export function sendDecisionEmail({ toEmail, toName, passed }) {
     ? {
         to_email: toEmail,
         candidate_name: toName,
-        subject_line: "Your A.F.I.A. Group Application - Decision",
+        subject_line: "Your A.F.I.A. Group Application Decision",
+        decision_heading: "Congratulations, " + toName + ".",
         decision_message:
-          "After careful review of your assessment, we are pleased to inform you that you have been selected to move forward in the hiring process for the Security Operations Center Analyst role. Please log back in to complete your candidate profile and finalize your onboarding.",
+          "Your assessment has been reviewed. We are pleased to inform you that you have been selected to proceed to the next stage of the recruitment process for the Junior SOC Analyst position.",
+        status_label: "Selected",
+        status_color: "#1E8E5A",
+        next_step: "Complete your candidate profile",
+        cta_text: "Complete Your Profile",
       }
     : {
         to_email: toEmail,
         candidate_name: toName,
-        subject_line: "Your A.F.I.A. Group Application - Decision",
+        subject_line: "Your A.F.I.A. Group Application Decision",
+        decision_heading: "Thank you, " + toName + ".",
         decision_message:
-          "Thank you for taking the time to complete the assessment for the Security Operations Center Analyst role. After careful review, we have decided not to move forward with your application at this time. We encourage you to reapply in the future.",
+          "Thank you for completing the assessment for the Junior SOC Analyst position. After careful review, we will not be moving forward with your application at this time. You are welcome to apply again.",
+        status_label: "Not selected",
+        status_color: "#6B7A8C",
+        next_step: "You may apply again",
+        cta_text: "Return to the Portal",
       }
 
   return emailjs.send(SERVICE_ID, DECISION_TEMPLATE_ID, params)
